@@ -1,13 +1,12 @@
 <component name="libraryTable">
   <library name="lib">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/../../javafx-sdk-17.0.15/lib" />
+      <root url="jar://$PROJECT_DIR$/../../mysql-connector-j-9.3.0/mysql-connector-j-9.3.0.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <NATIVE>
-      <root url="file://$PROJECT_DIR$/../../javafx-sdk-17.0.15/lib" />
-    </NATIVE>
-    <SOURCES />
-    <jarDirectory url="file://$PROJECT_DIR$/../../javafx-sdk-17.0.15/lib" recursive="false" />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../javafx-sdk-17.0.15" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/../../javafx-sdk-17.0.15" recursive="false" type="SOURCES" />
   </library>
 </component>
