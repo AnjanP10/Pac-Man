@@ -16,10 +16,7 @@ import javafx.stage.Stage;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Game {
 
@@ -53,6 +50,7 @@ public class Game {
     private final List<int[][]> levels = new ArrayList<>();
     private final Set<String> pellets = new HashSet<>();
     private PacMan pacman;
+    private List<Ghost> ghosts = new ArrayList<>();
 
     public void show(Stage stage) {
         initLevels();
@@ -66,6 +64,13 @@ public class Game {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         pacman = new PacMan(TILE_SIZE * 1.5 - 11, TILE_SIZE * 1.5 - 11);
+
+        // Initialize ghosts with their scatter targets
+        ghosts.clear();
+        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 7, Color.RED, 0, COLS - 1, this));    // Blinky
+        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 8, Color.PINK, 0, 0, this));          // Pinky
+        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 9, Color.CYAN, ROWS - 1, COLS - 1, this));  // Inky
+        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 10, Color.ORANGE, ROWS - 1, 0, this));     // Clyde
 
         pellets.clear();
         for (int r = 0; r < ROWS; r++)
@@ -123,6 +128,9 @@ public class Game {
         stage.setScene(scene);
         stage.setTitle("Smooth Pac-Man");
         stage.show();
+
+        root.requestFocus();  // << Request focus on root node so key events are received
+
         startTime = System.currentTimeMillis();
 
         scene.setOnKeyPressed(e -> {
@@ -138,6 +146,10 @@ public class Game {
                 resumeGame();
             }
         });
+
+        scene.setOnMouseClicked(e -> root.requestFocus());  // refocus on mouse click
+
+
 
         new AnimationTimer() {
             @Override
@@ -184,11 +196,25 @@ public class Game {
                 gc.fillText("Score: " + score, 10, 25);
                 gc.fillText("Time: " + elapsedSeconds + "s", 120, 25);
 
+                // Update and draw ghosts
+                for (Ghost g : ghosts) {
+                    g.update(pacman.getX(), pacman.getY(), pacman.getDirection(), ghosts.get(0).getX(), ghosts.get(0).getY());
+                    g.draw(gc);
+
+                    // Check collision with Pac-Man
+                    if (g.checkPacmanCollision(pacman.getX(), pacman.getY())) {
+                        stop();
+                        showGameOver(stage);
+                        return;
+                    }
+                }
+
                 if (pellets.isEmpty()) {
                     saveScore();
                     stop();
                     showGameOver(stage);
                 }
+
                 pacman.draw(gc);
             }
         }.start();
