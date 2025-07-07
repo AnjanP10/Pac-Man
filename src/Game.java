@@ -5,13 +5,16 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.scene.layout.HBox;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -62,7 +65,42 @@ public class Game extends Application {
                 if (map[r][c] == 0)
                     pellets.add(r + "," + c);
 
-        Scene scene = new Scene(new StackPane(canvas));
+        // Exit Button
+        Button exitButton = new Button("Exit");
+        exitButton.setStyle(
+                "-fx-background-color: rgba(207,159,64,0.94); " +        // Bootstrap's red
+                        "-fx-text-fill: #384098; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-font-size: 14px; " +
+                        "-fx-cursor: hand;"
+        );
+        exitButton.setOnAction(e -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirm Exit");
+            alert.setHeaderText(null);
+            alert.setContentText("Are you sure you want to exit the game?");
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    try {
+                        stop(); // stop AnimationTimer
+                        LoginScreen.show(stage);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
+        });
+
+// Top bar with Exit button
+        HBox topBar = new HBox(exitButton);
+        topBar.setAlignment(Pos.TOP_RIGHT);
+        topBar.setPadding(new Insets(6));
+
+// Root layout stacking top bar and game canvas
+        StackPane root = new StackPane(canvas, topBar);
+
+        Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.setTitle("Smooth Pac-Man");
         stage.show();
@@ -156,17 +194,42 @@ public class Game extends Application {
 
     private void showGameOver(Stage stage) {
         Label msg = new Label("You won!\nYour score: " + score + "\nYour time: " + elapsedSeconds + " seconds");
-        msg.setStyle("-fx-font-size: 18px; -fx-text-fill: #333;-fx-text-fill: rgba(207,159,64,0.94)");
+        msg.setStyle("-fx-font-size: 18px; -fx-text-fill: rgba(207,159,64,0.94)");
 
+        // Create buttons
         Button backBtn = new Button("Back to Login");
-        backBtn.setOnAction(e -> LoginScreen.show(stage));
+        Button playAgainBtn = new Button("Play Again");
+        Button exitBtn = new Button("Exit");
 
-        VBox root = new VBox(15, msg, backBtn);
+        // Load icons
+        javafx.scene.image.Image loginIcon = new javafx.scene.image.Image(getClass().getResourceAsStream("/icons/login.png"), 16, 16, true, true);
+        javafx.scene.image.Image replayIcon = new javafx.scene.image.Image(getClass().getResourceAsStream("/icons/replay.png"), 16, 16, true, true);
+        javafx.scene.image.Image exitIcon = new javafx.scene.image.Image(getClass().getResourceAsStream("/icons/exit.png"), 16, 16, true, true);
+
+        // Assign icons to buttons
+        backBtn.setGraphic(new javafx.scene.image.ImageView(loginIcon));
+        playAgainBtn.setGraphic(new javafx.scene.image.ImageView(replayIcon));
+        exitBtn.setGraphic(new javafx.scene.image.ImageView(exitIcon));
+
+        // Button actions
+        backBtn.setOnAction(e -> LoginScreen.show(stage));
+        playAgainBtn.setOnAction(e -> {
+            Game newGame = new Game();
+            newGame.start(stage);
+        });
+        exitBtn.setOnAction(e -> stage.close());
+
+        // Layout
+        javafx.scene.layout.HBox buttons = new javafx.scene.layout.HBox(15, backBtn, playAgainBtn, exitBtn);
+        buttons.setAlignment(Pos.CENTER);
+
+        VBox root = new VBox(20, msg, buttons);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20));
         root.setStyle("-fx-background-color: rgb(56,64,152);");
 
-        stage.setScene(new Scene(root, 300, 200));
+        stage.setScene(new Scene(root, 400, 220));
     }
+
 
 }

@@ -8,6 +8,15 @@ import javafx.stage.Stage;
 public class LoginScreen {
 
     public static void show(Stage stage) {
+        javafx.scene.image.Image loginIcon = new javafx.scene.image.Image(
+                LoginScreen.class.getResourceAsStream("/icons/login.png"),
+                16, 16, true, true
+        );
+        javafx.scene.image.Image registerIcon = new javafx.scene.image.Image(
+                LoginScreen.class.getResourceAsStream("/icons/login.png"),
+                16, 16, true, true
+        );
+
         Label title = new Label("Login to Pac-Man");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: rgba(207,159,64,0.94)");
 
@@ -47,7 +56,9 @@ public class LoginScreen {
 
         // Set buttons width for symmetry
         loginBtn.setMaxWidth(Double.MAX_VALUE);
+        loginBtn.setGraphic(new javafx.scene.image.ImageView(loginIcon));
         registerBtn.setMaxWidth(Double.MAX_VALUE);
+        registerBtn.setGraphic(new javafx.scene.image.ImageView(registerIcon));
 
         // Action handlers (example)
         loginBtn.setOnAction(e -> {

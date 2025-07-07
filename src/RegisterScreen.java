@@ -8,6 +8,18 @@ import javafx.stage.Stage;
 public class RegisterScreen {
 
     public static void show(Stage stage) {
+
+        // Load icons
+        javafx.scene.image.Image registerIcon = new javafx.scene.image.Image(
+                RegisterScreen.class.getResourceAsStream("/icons/login.png"),
+                16, 16, true, true
+        );
+        javafx.scene.image.Image backIcon = new javafx.scene.image.Image(
+                RegisterScreen.class.getResourceAsStream("/icons/exit.png"),
+                16, 16, true, true
+        );
+
+
         Label title = new Label("Register for Pac-Man");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: rgba(207,159,64,0.94)");
 
@@ -58,6 +70,9 @@ public class RegisterScreen {
         // Buttons same width
         registerBtn.setMaxWidth(Double.MAX_VALUE);
         backBtn.setMaxWidth(Double.MAX_VALUE);
+        registerBtn.setGraphic(new javafx.scene.image.ImageView(registerIcon));
+        backBtn.setGraphic(new javafx.scene.image.ImageView(backIcon));
+
 
         // Action handlers
         registerBtn.setOnAction(e -> {
