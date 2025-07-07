@@ -70,8 +70,7 @@ public class LoginScreen {
                 Session.currentUser = username.getText();
                 message.setStyle("-fx-text-fill: green;");
                 message.setText("Login Success!");
-                Game game = new Game();
-                game.start(stage);
+                MenuScreen.show(stage);
             } else {
                 message.setStyle("-fx-text-fill: red;");
                 message.setText("Invalid credentials!");

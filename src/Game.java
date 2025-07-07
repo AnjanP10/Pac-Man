@@ -10,11 +10,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import javafx.scene.layout.HBox;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,13 +22,26 @@ import java.util.Set;
 
 public class Game extends Application {
 
+    public enum GameState {
+        RUNNING,
+        PAUSED,
+        GAME_OVER
+    }
+
     public final int TILE_SIZE = 32;
     public final int ROWS = 15;
     public final int COLS = 20;
 
-    private long startTime; // ⏱️ Store game start time
-    private int elapsedSeconds; // ⌛ Track elapsed seconds
+    private long startTime;
+    private long pauseStartTime = 0;
+    private long totalPausedDuration = 0;
+    private int elapsedSeconds;
     private int score = 0;
+
+    private GameState gameState = GameState.RUNNING;
+    private Label pauseLabel;
+    private Rectangle pauseOverlay;
+    private Button pauseResumeButton;
 
     public final int[][] map = {
             {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -59,7 +71,6 @@ public class Game extends Application {
 
         pacman = new PacMan(TILE_SIZE * 1.5 - 11, TILE_SIZE * 1.5 - 11);
 
-        // Initialize pellets
         for (int r = 0; r < ROWS; r++)
             for (int c = 0; c < COLS; c++)
                 if (map[r][c] == 0)
@@ -68,8 +79,8 @@ public class Game extends Application {
         // Exit Button
         Button exitButton = new Button("Exit");
         exitButton.setStyle(
-                "-fx-background-color: rgba(207,159,64,0.94); " +        // Bootstrap's red
-                        "-fx-text-fill: #384098; " +
+                "-fx-background-color: rgba(100,149,237,0.94); " +
+                        "-fx-text-fill: white; " +
                         "-fx-font-weight: bold; " +
                         "-fx-font-size: 14px; " +
                         "-fx-cursor: hand;"
@@ -78,12 +89,11 @@ public class Game extends Application {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Confirm Exit");
             alert.setHeaderText(null);
-            alert.setContentText("Are you sure you want to exit the game?");
-
+            alert.setContentText("Are you sure you want to exit?");
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
                     try {
-                        stop(); // stop AnimationTimer
+                        stop();
                         LoginScreen.show(stage);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -92,13 +102,36 @@ public class Game extends Application {
             });
         });
 
-// Top bar with Exit button
-        HBox topBar = new HBox(exitButton);
+        // Pause/Resume Button
+        pauseResumeButton = new Button("Pause");
+        pauseResumeButton.setStyle(
+                "-fx-background-color: rgba(100,149,237,0.94); " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-font-size: 14px; " +
+                        "-fx-cursor: hand;"
+        );
+        pauseResumeButton.setOnAction(e -> togglePause());
+
+        // Top bar with Exit and Pause/Resume
+        HBox topBar = new HBox(10, pauseResumeButton, exitButton);
         topBar.setAlignment(Pos.TOP_RIGHT);
         topBar.setPadding(new Insets(6));
 
-// Root layout stacking top bar and game canvas
-        StackPane root = new StackPane(canvas, topBar);
+        // Pause overlay
+        pauseOverlay = new Rectangle(canvas.getWidth(), canvas.getHeight());
+        pauseOverlay.setFill(Color.rgb(0,0,0,0.5));
+        pauseOverlay.setVisible(false);
+
+        pauseLabel = new Label("PAUSED");
+        pauseLabel.setStyle("-fx-font-size: 36px; -fx-text-fill: yellow;");
+        pauseLabel.setVisible(false);
+
+        StackPane overlay = new StackPane(pauseOverlay, pauseLabel);
+        overlay.setPickOnBounds(false);
+
+        StackPane root = new StackPane(canvas, overlay, topBar);
+        StackPane.setAlignment(topBar, Pos.TOP_RIGHT);
 
         Scene scene = new Scene(root);
         stage.setScene(scene);
@@ -107,129 +140,135 @@ public class Game extends Application {
         startTime = System.currentTimeMillis();
 
         scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.UP) pacman.setDirection("UP");
-            else if (e.getCode() == KeyCode.DOWN) pacman.setDirection("DOWN");
-            else if (e.getCode() == KeyCode.LEFT) pacman.setDirection("LEFT");
-            else if (e.getCode() == KeyCode.RIGHT) pacman.setDirection("RIGHT");
+            if (gameState == GameState.RUNNING) {
+                if (e.getCode() == KeyCode.UP) pacman.setDirection("UP");
+                else if (e.getCode() == KeyCode.DOWN) pacman.setDirection("DOWN");
+                else if (e.getCode() == KeyCode.LEFT) pacman.setDirection("LEFT");
+                else if (e.getCode() == KeyCode.RIGHT) pacman.setDirection("RIGHT");
+            }
+            if (e.getCode() == KeyCode.P) {
+                pauseGame();
+            } else if (e.getCode() == KeyCode.R) {
+                resumeGame();
+            }
         });
 
         new AnimationTimer() {
             @Override
             public void handle(long now) {
+                if (gameState == GameState.PAUSED) return;
+
                 pacman.update(Game.this);
 
-                // Clear background
                 gc.setFill(Color.BLACK);
-                gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                gc.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
 
-                // Draw walls
-                for (int r = 0; r < ROWS; r++)
-                    for (int c = 0; c < COLS; c++)
-                        if (map[r][c] == 1) {
-                            double x = c * TILE_SIZE;
-                            double y = r * TILE_SIZE;
+                for (int r=0;r<ROWS;r++)
+                    for (int c=0;c<COLS;c++)
+                        if (map[r][c]==1) {
+                            double x=c*TILE_SIZE, y=r*TILE_SIZE;
                             gc.setFill(Color.DARKBLUE);
-                            gc.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                            gc.fillRect(x,y,TILE_SIZE,TILE_SIZE);
                             gc.setStroke(Color.BLUE);
                             gc.setLineWidth(2);
-                            gc.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+                            gc.strokeRect(x,y,TILE_SIZE,TILE_SIZE);
                         }
 
-                // Draw pellets
                 gc.setFill(Color.YELLOW);
-                Set<String> eaten = new HashSet<>();
-                for (String p : pellets) {
-                    String[] parts = p.split(",");
-                    int pr = Integer.parseInt(parts[0]);
-                    int pc = Integer.parseInt(parts[1]);
-
-                    double px = pc * TILE_SIZE + TILE_SIZE / 2.0;
-                    double py = pr * TILE_SIZE + TILE_SIZE / 2.0;
-
-                    if (pacman.checkPelletCollision(px, py)) {
+                Set<String> eaten=new HashSet<>();
+                for(String p:pellets){
+                    String[] parts=p.split(",");
+                    int pr=Integer.parseInt(parts[0]);
+                    int pc=Integer.parseInt(parts[1]);
+                    double px=pc*TILE_SIZE+TILE_SIZE/2.0;
+                    double py=pr*TILE_SIZE+TILE_SIZE/2.0;
+                    if(pacman.checkPelletCollision(px,py)){
                         eaten.add(p);
-                        score += 10; // Each pellet worth 10 points
-                    } else {
-                        gc.fillOval(px - 4, py - 4, 8, 8);
+                        score+=10;
+                    }else{
+                        gc.fillOval(px-4,py-4,8,8);
                     }
                 }
                 pellets.removeAll(eaten);
 
-                // ⏱️ Calculate time elapsed in seconds
-                elapsedSeconds = (int)((System.currentTimeMillis() - startTime) / 1000);
+                elapsedSeconds=(int)((System.currentTimeMillis()-startTime-totalPausedDuration)/1000);
 
-                // ✅ Draw the score
-                gc.setFill(Color.YELLOW);
                 gc.setFont(javafx.scene.text.Font.font(20));
-                gc.fillText("Score: " + score, 10, 25);
+                gc.fillText("Score: "+score,10,25);
+                gc.fillText("Time: "+elapsedSeconds+"s",100,25);
 
-                // ✅ Draw Timer
-                gc.fillText("Time: " + elapsedSeconds + "s", 100, 25);
-
-                if (pellets.isEmpty()) {
+                if(pellets.isEmpty()){
                     saveScore();
-                    stop(); // Stop animation timer
+                    stop();
                     showGameOver(stage);
                 }
                 pacman.draw(gc);
             }
         }.start();
     }
-    public void saveScore() {
-        if (Session.currentUser == null) return;
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO game_results (username, score, time_taken) VALUES (?, ?, ?)"
-            );
-            stmt.setString(1, Session.currentUser);
-            stmt.setInt(2, score);
-            stmt.setInt(3, elapsedSeconds);
-            stmt.executeUpdate();
-            System.out.println("Result saved for user: " + Session.currentUser);
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void togglePause(){
+        if (gameState == GameState.RUNNING){
+            pauseGame();
+        } else if (gameState == GameState.PAUSED){
+            resumeGame();
         }
     }
 
-    private void showGameOver(Stage stage) {
-        Label msg = new Label("You won!\nYour score: " + score + "\nYour time: " + elapsedSeconds + " seconds");
-        msg.setStyle("-fx-font-size: 18px; -fx-text-fill: rgba(207,159,64,0.94)");
-
-        // Create buttons
-        Button backBtn = new Button("Back to Login");
-        Button playAgainBtn = new Button("Play Again");
-        Button exitBtn = new Button("Exit");
-
-        // Load icons
-        javafx.scene.image.Image loginIcon = new javafx.scene.image.Image(getClass().getResourceAsStream("/icons/login.png"), 16, 16, true, true);
-        javafx.scene.image.Image replayIcon = new javafx.scene.image.Image(getClass().getResourceAsStream("/icons/replay.png"), 16, 16, true, true);
-        javafx.scene.image.Image exitIcon = new javafx.scene.image.Image(getClass().getResourceAsStream("/icons/exit.png"), 16, 16, true, true);
-
-        // Assign icons to buttons
-        backBtn.setGraphic(new javafx.scene.image.ImageView(loginIcon));
-        playAgainBtn.setGraphic(new javafx.scene.image.ImageView(replayIcon));
-        exitBtn.setGraphic(new javafx.scene.image.ImageView(exitIcon));
-
-        // Button actions
-        backBtn.setOnAction(e -> LoginScreen.show(stage));
-        playAgainBtn.setOnAction(e -> {
-            Game newGame = new Game();
-            newGame.start(stage);
-        });
-        exitBtn.setOnAction(e -> stage.close());
-
-        // Layout
-        javafx.scene.layout.HBox buttons = new javafx.scene.layout.HBox(15, backBtn, playAgainBtn, exitBtn);
-        buttons.setAlignment(Pos.CENTER);
-
-        VBox root = new VBox(20, msg, buttons);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(20));
-        root.setStyle("-fx-background-color: rgb(56,64,152);");
-
-        stage.setScene(new Scene(root, 400, 220));
+    private void pauseGame(){
+        if (gameState != GameState.RUNNING) return;
+        gameState = GameState.PAUSED;
+        pauseStartTime = System.currentTimeMillis();
+        pauseOverlay.setVisible(true);
+        pauseLabel.setVisible(true);
+        pauseResumeButton.setText("Resume");
     }
 
+    private void resumeGame(){
+        if (gameState != GameState.PAUSED) return;
+        totalPausedDuration += System.currentTimeMillis()-pauseStartTime;
+        gameState = GameState.RUNNING;
+        pauseOverlay.setVisible(false);
+        pauseLabel.setVisible(false);
+        pauseResumeButton.setText("Pause");
+    }
 
+    public void saveScore(){
+        if(Session.currentUser==null)return;
+        try(Connection conn=DatabaseConnection.getConnection()){
+            PreparedStatement stmt=conn.prepareStatement(
+                    "INSERT INTO game_results (username,score,time_taken) VALUES (?,?,?)"
+            );
+            stmt.setString(1,Session.currentUser);
+            stmt.setInt(2,score);
+            stmt.setInt(3,elapsedSeconds);
+            stmt.executeUpdate();
+        }catch(Exception e){ e.printStackTrace();}
+    }
+
+    private void showGameOver(Stage stage){
+        Label msg=new Label("You won!\nYour score: "+score+"\nYour time: "+elapsedSeconds+" seconds");
+        msg.setStyle("-fx-font-size:18px;-fx-text-fill:rgba(207,159,64,0.94)");
+
+        Button backBtn=new Button("Back to Login");
+        Button playAgainBtn=new Button("Play Again");
+        Button exitBtn=new Button("Exit");
+
+        backBtn.setOnAction(e->LoginScreen.show(stage));
+        playAgainBtn.setOnAction(e->{
+            Game newGame=new Game();
+            newGame.start(stage);
+        });
+        exitBtn.setOnAction(e->stage.close());
+
+        HBox buttons=new HBox(15,backBtn,playAgainBtn,exitBtn);
+        buttons.setAlignment(Pos.CENTER);
+
+        VBox root=new VBox(20,msg,buttons);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(20));
+        root.setStyle("-fx-background-color:rgb(56,64,152);");
+
+        stage.setScene(new Scene(root,400,220));
+    }
 }
