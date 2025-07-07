@@ -26,8 +26,7 @@ public class MenuScreen {
         backBtn.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
 
         playBtn.setOnAction(e -> {
-            Game game = new Game();
-            game.start(stage);
+            LevelSelectionScreen.show(stage);
         });
 
         historyBtn.setOnAction(e -> {
