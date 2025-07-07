@@ -23,6 +23,9 @@ public class Game extends Application {
     public final int TILE_SIZE = 32;
     public final int ROWS = 15;
     public final int COLS = 20;
+
+    private long startTime; // ⏱️ Store game start time
+    private int elapsedSeconds; // ⌛ Track elapsed seconds
     private int score = 0;
 
     public final int[][] map = {
@@ -63,6 +66,7 @@ public class Game extends Application {
         stage.setScene(scene);
         stage.setTitle("Smooth Pac-Man");
         stage.show();
+        startTime = System.currentTimeMillis();
 
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.UP) pacman.setDirection("UP");
@@ -113,10 +117,16 @@ public class Game extends Application {
                 }
                 pellets.removeAll(eaten);
 
+                // ⏱️ Calculate time elapsed in seconds
+                elapsedSeconds = (int)((System.currentTimeMillis() - startTime) / 1000);
+
                 // ✅ Draw the score
                 gc.setFill(Color.YELLOW);
                 gc.setFont(javafx.scene.text.Font.font(20));
                 gc.fillText("Score: " + score, 10, 25);
+
+                // ✅ Draw Timer
+                gc.fillText("Time: " + elapsedSeconds + "s", 100, 25);
 
                 if (pellets.isEmpty()) {
                     saveScore();
@@ -132,20 +142,21 @@ public class Game extends Application {
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO scores (username, score) VALUES (?, ?)"
+                    "INSERT INTO game_results (username, score, time_taken) VALUES (?, ?, ?)"
             );
             stmt.setString(1, Session.currentUser);
             stmt.setInt(2, score);
+            stmt.setInt(3, elapsedSeconds);
             stmt.executeUpdate();
-            System.out.println("Score saved for user: " + Session.currentUser);
+            System.out.println("Result saved for user: " + Session.currentUser);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void showGameOver(Stage stage) {
-        Label msg = new Label("You won!\nYour score: " + score);
-        msg.setStyle("-fx-font-size: 18px; -fx-text-fill: #333;");
+        Label msg = new Label("You won!\nYour score: " + score + "\nYour time: " + elapsedSeconds + " seconds");
+        msg.setStyle("-fx-font-size: 18px; -fx-text-fill: #333;-fx-text-fill: rgba(207,159,64,0.94)");
 
         Button backBtn = new Button("Back to Login");
         backBtn.setOnAction(e -> LoginScreen.show(stage));
@@ -153,7 +164,7 @@ public class Game extends Application {
         VBox root = new VBox(15, msg, backBtn);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20));
-        root.setStyle("-fx-background-color: #f0f0f0;");
+        root.setStyle("-fx-background-color: rgb(56,64,152);");
 
         stage.setScene(new Scene(root, 300, 200));
     }
