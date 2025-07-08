@@ -16,6 +16,8 @@ import javafx.stage.Stage;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class Game {
@@ -39,6 +41,7 @@ public class Game {
     private long pauseStartTime = 0;
     private long totalPausedDuration = 0;
     private int elapsedSeconds;
+    private LocalDateTime played_at;
     private int score = 0;
 
     private GameState gameState = GameState.RUNNING;
@@ -67,10 +70,8 @@ public class Game {
 
         // Initialize ghosts with their scatter targets
         ghosts.clear();
-        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 7, Color.RED, 0, COLS - 1, this));    // Blinky
-        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 8, Color.PINK, 0, 0, this));          // Pinky
-        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 9, Color.CYAN, ROWS - 1, COLS - 1, this));  // Inky
-        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 10, Color.ORANGE, ROWS - 1, 0, this));     // Clyde
+        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 7, Color.RED, 0, COLS - 1, this, "src/icons/red_ghost.png"));
+        ghosts.add(new Ghost(TILE_SIZE * 9, TILE_SIZE * 9, Color.ORANGE, ROWS - 1, 0, this, "src/icons/orange_ghost.png"));
 
         pellets.clear();
         for (int r = 0; r < ROWS; r++)
@@ -129,9 +130,10 @@ public class Game {
         stage.setTitle("Smooth Pac-Man");
         stage.show();
 
-        root.requestFocus();  // << Request focus on root node so key events are received
+        root.requestFocus();
 
         startTime = System.currentTimeMillis();
+        played_at = LocalDateTime.now(); // ✅ Set played_at
 
         scene.setOnKeyPressed(e -> {
             if (gameState == GameState.RUNNING) {
@@ -147,9 +149,7 @@ public class Game {
             }
         });
 
-        scene.setOnMouseClicked(e -> root.requestFocus());  // refocus on mouse click
-
-
+        scene.setOnMouseClicked(e -> root.requestFocus());
 
         new AnimationTimer() {
             @Override
@@ -164,16 +164,16 @@ public class Game {
                 for (int r = 0; r < ROWS; r++) {
                     for (int c = 0; c < COLS; c++) {
                         if (map[r][c] == 1) {
-                            double x = c * TILE_SIZE, y = r * TILE_SIZE;
-                            gc.setFill(Color.DARKBLUE);
-                            gc.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                            double x = c * TILE_SIZE;
+                            double y = r * TILE_SIZE;
                             gc.setStroke(Color.BLUE);
+                            gc.setLineWidth(3);
                             gc.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
                         }
                     }
                 }
 
-                gc.setFill(Color.YELLOW);
+                gc.setFill(Color.WHITE);
                 Set<String> eaten = new HashSet<>();
                 for (String p : pellets) {
                     String[] parts = p.split(",");
@@ -181,11 +181,12 @@ public class Game {
                     int pc = Integer.parseInt(parts[1]);
                     double px = pc * TILE_SIZE + TILE_SIZE / 2.0;
                     double py = pr * TILE_SIZE + TILE_SIZE / 2.0;
+
                     if (pacman.checkPelletCollision(px, py)) {
                         eaten.add(p);
                         score += 10;
                     } else {
-                        gc.fillOval(px - 4, py - 4, 8, 8);
+                        gc.fillOval(px - 2, py - 2, 4, 4);
                     }
                 }
                 pellets.removeAll(eaten);
@@ -196,12 +197,12 @@ public class Game {
                 gc.fillText("Score: " + score, 10, 25);
                 gc.fillText("Time: " + elapsedSeconds + "s", 120, 25);
 
-                // Update and draw ghosts
+                // ✅ Update and draw ghosts
                 for (Ghost g : ghosts) {
+                    g.setState(GhostState.CHASE); // Make sure ghosts chase
                     g.update(pacman.getX(), pacman.getY(), pacman.getDirection(), ghosts.get(0).getX(), ghosts.get(0).getY());
                     g.draw(gc);
 
-                    // Check collision with Pac-Man
                     if (g.checkPacmanCollision(pacman.getX(), pacman.getY())) {
                         stop();
                         showGameOver(stage);
@@ -250,11 +251,12 @@ public class Game {
         if (Session.currentUser == null) return;
         try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO game_results (username,score,time_taken) VALUES (?,?,?)"
+                    "INSERT INTO game_results (username,score,time_taken,played_at) VALUES (?,?,?,?)"
             );
             stmt.setString(1, Session.currentUser);
             stmt.setInt(2, score);
             stmt.setInt(3, elapsedSeconds);
+            stmt.setTimestamp(4, Timestamp.valueOf(played_at));
             stmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
