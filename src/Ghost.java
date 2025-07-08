@@ -184,7 +184,6 @@ public class Ghost {
             r = prevR;
             c = prevC;
         }
-
         return -1;
     }
 }
