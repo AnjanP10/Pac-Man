@@ -77,7 +77,6 @@ public class Ghost {
                     targetCol = new Random().nextInt(game.COLS);
                 }
             }
-
             int nextDirection = bfsDirection();
 
             if (nextDirection == -1 || !canMove(currentRow, currentCol, nextDirection)) {
