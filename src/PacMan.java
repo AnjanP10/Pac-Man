@@ -122,7 +122,6 @@ public class PacMan {
     public double getX() {
         return x + SIZE / 2.0;
     }
-
     public double getY() {
         return y + SIZE / 2.0;
     }
