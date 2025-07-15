@@ -106,7 +106,6 @@ public class Ghost {
         y += speedY;
     }
 
-
     private boolean canMove(int row, int col, int direction) {
         int[] dr = {-1, 1, 0, 0};
         int[] dc = {0, 0, -1, 1};
