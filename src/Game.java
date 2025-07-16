@@ -70,23 +70,11 @@ public class Game {
 
         // Initialize ghosts with their scatter targets
         ghosts.clear();
-        ghosts.add(new Ghost(
-                TILE_SIZE * (COLS / 2),
-                TILE_SIZE * (ROWS / 2),
-                Color.RED,
-                0, COLS - 1,
-                this,
-                "src/icons/red_ghost.png"
-        ));
-        ghosts.add(new Ghost(
-                TILE_SIZE * ((COLS / 2) + 1),
-                TILE_SIZE * ((ROWS / 2) + 1),
-                Color.ORANGE,
-                ROWS - 1,
-                0,
-                this,
-                "src/icons/orange_ghost.png"
-        ));
+        ghosts.add(new Ghost(TILE_SIZE*9, TILE_SIZE*7, Color.RED, 0, COLS-1, this, "src/icons/red_ghost.png", Ghost.GhostType.BLINKY));
+        ghosts.add(new Ghost(TILE_SIZE*9, TILE_SIZE*9, Color.PINK, 0, 0, this, "src/icons/pink_ghost.png", Ghost.GhostType.PINKY));
+        ghosts.add(new Ghost(TILE_SIZE*9, TILE_SIZE*11, Color.CYAN, ROWS-1, COLS-1, this, "src/icons/blue_ghost.png", Ghost.GhostType.INKY));
+        ghosts.add(new Ghost(TILE_SIZE*9, TILE_SIZE*13, Color.ORANGE, ROWS-1, 0, this, "src/icons/orange_ghost.png", Ghost.GhostType.CLYDE));
+
         pellets.clear();
         for (int r = 0; r < ROWS; r++)
             for (int c = 0; c < COLS; c++)
@@ -213,7 +201,6 @@ public class Game {
 
                 // ✅ Update and draw ghosts
                 for (Ghost g : ghosts) {
-                    g.setState(GhostState.CHASE); // Make sure ghosts chase
                     g.update(pacman.getX(), pacman.getY(), pacman.getDirection(), ghosts.get(0).getX(), ghosts.get(0).getY());
                     g.draw(gc);
 
