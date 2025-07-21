@@ -101,7 +101,6 @@ public class RegisterScreen {
         });
 
         backBtn.setOnAction(e -> LoginScreen.show(stage));
-
         stage.setScene(new Scene(grid, 450, 400));
         stage.setTitle("Pac-Man Registration");
         stage.show();

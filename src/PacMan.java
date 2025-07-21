@@ -117,7 +117,6 @@ public class PacMan {
                 game.map[bottomTile][leftTile] == 0 &&
                 game.map[bottomTile][rightTile] == 0;
     }
-
     // getX and getY return Pac-Man's center for other objects (like Ghost)
     public double getX() {
         return x + SIZE / 2.0;

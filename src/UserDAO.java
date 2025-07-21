@@ -7,7 +7,7 @@ public class UserDAO {
         try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement("INSERT INTO users(username, password) VALUES(?, ?)");
             stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getPassword()); // You can hash here later
+            stmt.setString(2, user.getPassword());
             stmt.executeUpdate();
             return true;
         } catch (SQLException e) {
