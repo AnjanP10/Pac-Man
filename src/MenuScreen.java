@@ -19,7 +19,6 @@ public class MenuScreen {
         historyBtn.setPrefWidth(180);
         backBtn.setPrefWidth(180);
 
-        // Consistent button styles
         String btnStyle = "-fx-background-color: rgba(207,159,64,0.94); -fx-text-fill: rgb(56,64,152); -fx-font-size: 16px; -fx-font-weight: bold;";
         playBtn.setStyle(btnStyle);
         historyBtn.setStyle(btnStyle);
@@ -37,7 +36,6 @@ public class MenuScreen {
             LoginScreen.show(stage);
         });
 
-        // Use GridPane for consistent padding and spacing
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setPadding(new Insets(20));

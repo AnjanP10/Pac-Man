@@ -6,7 +6,6 @@ public class Main extends Application {
     public void start(Stage stage) {
         LoginScreen.show(stage);
     }
-
     public static void main(String[] args) {
         launch();
     }

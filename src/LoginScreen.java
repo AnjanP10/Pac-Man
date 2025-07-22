@@ -36,7 +36,6 @@ public class LoginScreen {
         Label message = new Label();
         message.setStyle("-fx-text-fill: red;");
 
-        // GridPane for layout
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setPadding(new Insets(20));
@@ -44,7 +43,6 @@ public class LoginScreen {
         grid.setVgap(15);
         grid.setStyle("-fx-background-color: rgb(56,64,152); -fx-border-color: rgba(207,159,64,0.94); -fx-border-width: 2px;");
 
-        // Add nodes to grid: (col, row)
         grid.add(title, 0, 0, 2, 1); // span 2 columns
         grid.add(userLabel, 0, 1);
         grid.add(username, 1, 1);
@@ -54,13 +52,11 @@ public class LoginScreen {
         grid.add(registerBtn, 0, 3);
         grid.add(message, 0, 4, 2, 1);
 
-        // Set buttons width for symmetry
         loginBtn.setMaxWidth(Double.MAX_VALUE);
         loginBtn.setGraphic(new javafx.scene.image.ImageView(loginIcon));
         registerBtn.setMaxWidth(Double.MAX_VALUE);
         registerBtn.setGraphic(new javafx.scene.image.ImageView(registerIcon));
 
-        // Action handlers (example)
         loginBtn.setOnAction(e -> {
             if (username.getText().isEmpty() || password.getText().isEmpty()) {
                 message.setText("All fields required!");

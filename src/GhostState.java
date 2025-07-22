@@ -3,3 +3,4 @@ public enum GhostState {
     CHASE,
     FRIGHTENED
 }
+

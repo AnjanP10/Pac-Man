@@ -83,7 +83,7 @@ public class Ghost {
             return;
         }
 
-        // Set target based on state and ghost type
+        // Set target based on state and ghost type  VECTOR MATH- INKY TARGETING
         switch (state) {
             case SCATTER -> {
                 targetRow = scatterTargetRow;
@@ -126,6 +126,7 @@ public class Ghost {
                         targetRow = clamp(blinkyRow + vecRow * 2, 0, game.ROWS - 1);
                         targetCol = clamp(blinkyCol + vecCol * 2, 0, game.COLS - 1);
                     }
+                    // Manhattan Distance – Clyde’s Scatter Logic
                     case CLYDE -> {
                         int pacRow = (int) (pacY / game.TILE_SIZE);
                         int pacCol = (int) (pacX / game.TILE_SIZE);
@@ -261,10 +262,9 @@ public class Ghost {
     private int bfsDirection() {
         int startRow = (int) (y / game.TILE_SIZE);
         int startCol = (int) (x / game.TILE_SIZE);
-        if (startRow == targetRow && startCol == targetCol) {
-            System.out.println(type + " BFS: already at target");
-            return -1;
-        }
+
+        if (startRow == targetRow && startCol == targetCol) return -1;
+
         boolean[][] visited = new boolean[game.ROWS][game.COLS];
         int[][] firstMove = new int[game.ROWS][game.COLS];
         for (int[] row : firstMove) Arrays.fill(row, -1);
@@ -273,29 +273,33 @@ public class Ghost {
         queue.add(new int[]{startRow, startCol});
         visited[startRow][startCol] = true;
 
-        int[] dr = {-1, 1, 0, 0};
+        int[] dr = {-1, 1, 0, 0};  // UP, DOWN, LEFT, RIGHT
         int[] dc = {0, 0, -1, 1};
 
         while (!queue.isEmpty()) {
             int[] current = queue.poll();
             int r = current[0], c = current[1];
+
             for (int d = 0; d < 4; d++) {
                 int nr = r + dr[d];
                 int nc = c + dc[d];
-                if (nr >= 0 && nr < game.ROWS && nc >= 0 && nc < game.COLS && !visited[nr][nc] && game.map[nr][nc] == 0) {
-                    visited[nr][nc] = true;
-                    queue.add(new int[]{nr, nc});
-                    if (r == startRow && c == startCol) firstMove[nr][nc] = d;
-                    else firstMove[nr][nc] = firstMove[r][c];
-                    if (nr == targetRow && nc == targetCol) {
-                        System.out.println(type + " BFS found direction: " + firstMove[nr][nc]);
-                        return firstMove[nr][nc];
-                    }
+
+                if (nr < 0 || nr >= game.ROWS || nc < 0 || nc >= game.COLS) continue;
+                if (visited[nr][nc] || game.map[nr][nc] != 0) continue;
+
+                visited[nr][nc] = true;
+                queue.add(new int[]{nr, nc});
+                firstMove[nr][nc] = (r == startRow && c == startCol) ? d : firstMove[r][c];
+
+                if (nr == targetRow && nc == targetCol) {
+                    return firstMove[nr][nc];
                 }
             }
         }
-        return -1;
+
+        return -1; // No path found
     }
+
     public double getX() { return x; }
     public double getY() { return y; }
 }

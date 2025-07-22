@@ -9,7 +9,6 @@ public class RegisterScreen {
 
     public static void show(Stage stage) {
 
-        // Load icons
         javafx.scene.image.Image registerIcon = new javafx.scene.image.Image(
                 RegisterScreen.class.getResourceAsStream("/icons/login.png"),
                 16, 16, true, true
@@ -47,7 +46,6 @@ public class RegisterScreen {
         Label message = new Label();
         message.setStyle("-fx-text-fill: red;");
 
-        // GridPane layout
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setPadding(new Insets(20));
@@ -55,7 +53,6 @@ public class RegisterScreen {
         grid.setVgap(15);
         grid.setStyle("-fx-background-color: rgb(56,64,152); -fx-border-color: rgba(207,159,64,0.94); -fx-border-width: 2px;");
 
-        // Add nodes to grid: (col, row)
         grid.add(title, 0, 0, 2, 1);
         grid.add(userLabel, 0, 1);
         grid.add(username, 1, 1);
@@ -67,14 +64,11 @@ public class RegisterScreen {
         grid.add(backBtn, 0, 4);
         grid.add(message, 0, 5, 2, 1);
 
-        // Buttons same width
         registerBtn.setMaxWidth(Double.MAX_VALUE);
         backBtn.setMaxWidth(Double.MAX_VALUE);
         registerBtn.setGraphic(new javafx.scene.image.ImageView(registerIcon));
         backBtn.setGraphic(new javafx.scene.image.ImageView(backIcon));
 
-
-        // Action handlers
         registerBtn.setOnAction(e -> {
             String user = username.getText();
             String pass = password.getText();
