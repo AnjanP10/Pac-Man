@@ -17,7 +17,7 @@ public class LoginScreen {
                 16, 16, true, true
         );
 
-        Label title = new Label("Login to Pac-Man");
+        Label title = new Label("Login to Anjan");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: rgba(207,159,64,0.94)");
 
         Label userLabel = new Label("Username:");

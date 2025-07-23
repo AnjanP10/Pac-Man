@@ -56,7 +56,6 @@ public class Ghost {
     }
 
     public void update(double pacX, double pacY, String pacDirection, double blinkyX, double blinkyY) {
-        // Automatic state switching
         long elapsed = System.currentTimeMillis() - stateStartTime;
         if (state == GhostState.SCATTER && elapsed >= 7000) {
             setState(GhostState.CHASE);
@@ -273,7 +272,7 @@ public class Ghost {
         queue.add(new int[]{startRow, startCol});
         visited[startRow][startCol] = true;
 
-        int[] dr = {-1, 1, 0, 0};  // UP, DOWN, LEFT, RIGHT
+        int[] dr = {-1, 1, 0, 0};
         int[] dc = {0, 0, -1, 1};
 
         while (!queue.isEmpty()) {
@@ -297,7 +296,7 @@ public class Ghost {
             }
         }
 
-        return -1; // No path found
+        return -1;
     }
 
     public double getX() { return x; }
