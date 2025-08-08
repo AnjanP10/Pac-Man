@@ -4,6 +4,7 @@ import javafx.scene.paint.Color;
 import java.util.*;
 
 public class Ghost {
+
     public enum GhostType { BLINKY, PINKY, INKY, CLYDE }
     public enum GhostState { SCATTER, CHASE, FRIGHTENED }
 
@@ -21,7 +22,6 @@ public class Ghost {
     private GhostType type;
 
     private int lastDirection = -1;
-
     private long stateStartTime; // For scatter/chase timing
 
     private static final Random random = new Random();
