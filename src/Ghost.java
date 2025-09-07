@@ -12,6 +12,7 @@ public class Ghost {
     private final double size = 40;
     private final double speed = 2.0;  // Increased speed for visibility
     private double speedX = 0, speedY = 0;
+
     private Color color;
     private GhostState state;
     private int targetRow, targetCol;
@@ -183,7 +184,6 @@ public class Ghost {
         }
 
         if (nextDirection == -1) {
-            // No change to speedX/speedY: keep moving as is
             System.out.println(type + " no available moves, keeping speed");
         } else {
             switch (nextDirection) {
