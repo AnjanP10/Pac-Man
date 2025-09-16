@@ -38,6 +38,12 @@ public class Ghost {
         this.type = type;
         this.stateStartTime = System.currentTimeMillis();
 
+        int row = (int) (y / game.TILE_SIZE);
+        int col = (int) (x / game.TILE_SIZE);
+        if (game.map[row][col] != 0) {
+            System.out.println(type + " spawned in wall at (" + row + "," + col + ")");
+        }
+
         try {
             var url = getClass().getResource(imagePath);
             if (url != null) {
