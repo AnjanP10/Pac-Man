@@ -278,14 +278,12 @@ public class Ghost {
         while (!queue.isEmpty()) {
             int[] current = queue.poll();
             int r = current[0], c = current[1];
-
             for (int d = 0; d < 4; d++) {
                 int nr = r + dr[d];
                 int nc = c + dc[d];
 
                 if (nr < 0 || nr >= game.ROWS || nc < 0 || nc >= game.COLS) continue;
                 if (visited[nr][nc] || game.map[nr][nc] != 0) continue;
-
                 visited[nr][nc] = true;
                 queue.add(new int[]{nr, nc});
                 firstMove[nr][nc] = (r == startRow && c == startCol) ? d : firstMove[r][c];
@@ -295,7 +293,6 @@ public class Ghost {
                 }
             }
         }
-
         return -1;
     }
 
