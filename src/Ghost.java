@@ -10,7 +10,7 @@ public class Ghost {
 
     private double x, y;
     private final double size = 40;
-    private final double speed = 2.0;  // Increased speed for visibility
+    private final double speed = 1.5;  // Increased speed for visibility
     private double speedX = 0, speedY = 0;
 
     private Color color;
